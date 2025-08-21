@@ -1,75 +1,272 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React, { useMemo, useRef, useState } from "react";
+import {
+  Alert,
+  FlatList,
+  Image,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import Animated, { interpolate, useAnimatedStyle } from "react-native-reanimated";
+// ✅ Reanimated version (fixes deprecation)
+import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+type Chat = {
+  id: string;
+  name: string;
+  avatar: string;
+  lastMessage: string;
+  time: string;
+  pinned?: boolean;
+  unread?: number;
+};
 
-export default function HomeScreen() {
+const INITIAL: Chat[] = [
+  {
+    id: "1",
+    name: "Ava Stone",
+    avatar: "https://i.pravatar.cc/150?img=47",
+    lastMessage: "Let’s meet at 6?",
+    time: "2:45 PM",
+    pinned: true,
+    unread: 2,
+  },
+  {
+    id: "2",
+    name: "Dev Team",
+    avatar: "https://i.pravatar.cc/150?img=12",
+    lastMessage: "Ship day 🚀",
+    time: "1:35 PM",
+    unread: 0,
+  },
+  {
+    id: "3",
+    name: "Mom",
+    avatar: "https://i.pravatar.cc/150?img=5",
+    lastMessage: "Call me when free",
+    time: "10:02 AM",
+    unread: 5,
+  },
+  {
+    id: "4",
+    name: "Mom",
+    avatar: "https://i.pravatar.cc/150?img=5",
+    lastMessage: "Call me when free",
+    time: "10:02 AM",
+    unread: 5,
+  },
+  {
+    id: "5",
+    name: "Mom",
+    avatar: "https://i.pravatar.cc/150?img=5",
+    lastMessage: "Call me when free",
+    time: "10:02 AM",
+    unread: 5,
+  },
+  {
+    id: "6",
+    name: "Mom",
+    avatar: "https://i.pravatar.cc/150?img=5",
+    lastMessage: "Call me when free",
+    time: "10:02 AM",
+    unread: 5,
+  },
+];
+
+export default function Chats() {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [chats, setChats] = useState<Chat[]>(INITIAL);
+  const swipeRef = useRef<any>(null);
+
+  const filtered = useMemo(() => {
+    const f = chats.filter((c) =>
+      c.name.toLowerCase().includes(q.toLowerCase())
+    );
+    return [...f.filter((c) => c.pinned), ...f.filter((c) => !c.pinned)];
+  }, [q, chats]);
+
+  const onCall = (chat: Chat) => {
+    Alert.alert("Call", `Calling ${chat.name}…`);
+  };
+
+  const onDelete = (id: string) => {
+    setChats((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const LeftActions = (
+    progress: Animated.SharedValue<number>,
+    _translation: Animated.SharedValue<number>
+  ) => {
+    const aStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: interpolate(progress.value, [0, 1], [0.9, 1]) }],
+      opacity: interpolate(progress.value, [0, 1], [0.4, 1]),
+    }));
+    return (
+      <Animated.View
+        className="flex-row items-center justify-start px-5 bg-green-500 h-full rounded-r-2xl"
+        style={aStyle}
+      >
+        <Ionicons name="call" size={24} color="white" />
+        <Text className="ml-2 text-white font-medium">Call</Text>
+      </Animated.View>
+    );
+  };
+
+  const RightActions = (
+    progress: Animated.SharedValue<number>,
+    _translation: Animated.SharedValue<number>
+  ) => {
+    const aStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: interpolate(progress.value, [0, 1], [0.9, 1]) }],
+      opacity: interpolate(progress.value, [0, 1], [0.4, 1]),
+    }));
+    return (
+      <Animated.View
+        className="flex-row items-center justify-end px-5 bg-red-500 h-full rounded-l-2xl"
+        style={aStyle}
+      >
+        <Text className="mr-2 text-white font-medium">Delete</Text>
+        <Ionicons name="trash" size={24} color="white" />
+      </Animated.View>
+    );
+  };
+
+  const renderRow = ({ item }: { item: Chat }) => {
+
+    return (
+      <ReanimatedSwipeable
+        ref={swipeRef}
+        // swipe RIGHT → show LeftActions → Call
+        renderLeftActions={LeftActions}
+        // swipe LEFT → show RightActions → Delete
+        renderRightActions={RightActions}
+        friction={2}
+        leftThreshold={60}
+        rightThreshold={60}
+        overshootLeft={false}
+        overshootRight={false}
+        onSwipeableOpen={(direction) => {
+          if (direction === "right") {
+            onCall(item);
+          } else if (direction === "left") {
+            onDelete(item.id);
+          }
+          swipeRef.current?.close();
+        }}
+        childrenContainerStyle={{
+          borderRadius: 16,
+          overflow: "hidden",
+        }}
+        containerStyle={{
+          // needed so rounded corners look good over the actions
+          borderRadius: 16,
+          overflow: "hidden",
+          marginBottom: 8,
+        }}
+      >
+        <Pressable
+          onPress={() => router.push(`/chat/${item.id}`)}
+          android_ripple={{ color: "#e5e7eb" }}
+          className="flex-row items-center px-3 py-3 bg-white dark:bg-black"
+          style={{
+            shadowColor: "#000",
+            shadowOpacity: 0.04,
+            shadowRadius: 6,
+            shadowOffset: { width: 0, height: 2 },
+            elevation: Platform.OS === "android" ? 1 : 0,
+          }}
+        >
+          <Image source={{ uri: item.avatar }} className="w-12 h-12 rounded-full mr-3" />
+          <View className="flex-1">
+            <View className="flex-row items-center justify-between w-full">
+              <Text className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                {item.name}
+              </Text>
+              <View className="ml-2 min-w-[22px] py-0.5 rounded-full bg-green-500 items-center justify-center">
+              <Text className="text-[11px] text-white text-center">
+                {item.time}
+              </Text>
+              </View>
+            </View>
+            <View className="flex-row items-center justify-between mt-0.5">
+              <Text
+                className="flex-1 text-sm text-zinc-600 dark:text-zinc-400"
+                numberOfLines={1}
+              >
+                {item.lastMessage}
+              </Text>
+              {item.unread ? (
+                <View className="ml-2 min-w-[22px] px-1.5 py-0.5 rounded-full bg-blue-500 items-center justify-center">
+                  <Text className="text-[11px] text-white font-medium">
+                    {item.unread}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
+        </Pressable>
+      </ReanimatedSwipeable>
+    );
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <View className="flex-1 bg-white dark:bg-black px-4">
+      {/* Header */}
+      <Text className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-5">
+        Chats
+      </Text>
+
+      {/* Search Bar */}
+      <View
+        className="flex-row items-center gap-2 rounded-full px-4 py-2 mb-4 bg-zinc-100 dark:bg-zinc-900"
+        style={{
+          shadowColor: "#000",
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
+          shadowOffset: { width: 0, height: 2 },
+          elevation: Platform.OS === "android" ? 2 : 0,
+        }}
+      >
+        <Ionicons name="search" size={18} color="#9ca3af" />
+        <TextInput
+          placeholder="Search chats"
+          placeholderTextColor="#9ca3af"
+          value={q}
+          onChangeText={setQ}
+          className="flex-1 text-base text-zinc-900 dark:text-zinc-100"
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      </View>
+
+      {/* List */}
+      <FlatList
+        data={filtered}
+        keyExtractor={(item) => item.id}
+        renderItem={renderRow}
+        // ItemSeparatorComponent={() => (
+        //   <View className="h-[1px] bg-zinc-200 dark:bg-zinc-800 ml-14" />
+        // )}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      />
+
+      {/* Floating Action Button */}
+      <Pressable
+        className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-blue-500 items-center justify-center shadow-lg"
+        style={{
+          shadowColor: "#000",
+          shadowOpacity: 0.2,
+          shadowRadius: 6,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 5,
+        }}
+        onPress={() => Alert.alert("New chat", "Compose a new message")}
+      >
+        <Ionicons name="chatbubble-ellipses" size={26} color="white" />
+      </Pressable>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
