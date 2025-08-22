@@ -1,15 +1,45 @@
-import { View, Text } from "react-native";
-import Animated, { FadeInUp } from "react-native-reanimated";
+// components/MessageBubble.tsx
+import { Text, View } from "react-native";
 
-export default function MessageBubble({ message }: { message: any }) {
-  const isMe = message.sender === "me";
+type MessageBubbleProps = {
+  text: string;
+  isMe?: boolean; // true = current user, false = other user
+  time?: string;
+};
+
+export default function MessageBubble({
+  text,
+  isMe = false,
+  time,
+}: MessageBubbleProps) {
   return (
-    <Animated.View
-      entering={FadeInUp.duration(200)}
-      className={`max-w-[78%] px-3 py-2 my-1 rounded-2xl ${isMe ? "self-end bg-brand-500" : "self-start bg-zinc-200 dark:bg-zinc-800"}`}
+    <View
+      className={`flex-row mb-2 px-3 ${isMe ? "justify-end" : "justify-start"}`}
     >
-      <Text className={isMe ? "text-white" : "text-zinc-900 dark:text-zinc-100"}>{message.text}</Text>
-      <Text className={`text-[10px] mt-1 ${isMe ? "text-white/80" : "text-zinc-500 dark:text-zinc-400"}`}>now</Text>
-    </Animated.View>
+      <View
+        className={`max-w-[75%] px-3 py-2 rounded-2xl shadow-sm ${
+          isMe
+            ? "bg-blue-500 rounded-br-none"
+            : "bg-zinc-200 dark:bg-zinc-800 rounded-bl-none"
+        }`}
+      >
+        <Text
+          className={`text-base ${
+            isMe ? "text-white" : "text-black dark:text-white"
+          }`}
+        >
+          {text}
+        </Text>
+        {time && (
+          <Text
+            className={`text-xs mt-1 ${
+              isMe ? "text-blue-100" : "text-zinc-500 dark:text-zinc-400"
+            }`}
+          >
+            {time}
+          </Text>
+        )}
+      </View>
+    </View>
   );
 }

@@ -4,15 +4,15 @@ import React, { useMemo, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
-  Image,
   Platform,
   Pressable,
   Text,
   TextInput,
-  View,
+  View
 } from "react-native";
 import Animated, { interpolate, useAnimatedStyle } from "react-native-reanimated";
 // ✅ Reanimated version (fixes deprecation)
+import Avatar from "@/components/Avatar";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
 type Chat = {
@@ -38,7 +38,7 @@ const INITIAL: Chat[] = [
   {
     id: "2",
     name: "Dev Team",
-    avatar: "https://i.pravatar.cc/150?img=12",
+    avatar: "https://i",
     lastMessage: "Ship day 🚀",
     time: "1:35 PM",
     unread: 0,
@@ -181,16 +181,17 @@ export default function Chats() {
             elevation: Platform.OS === "android" ? 1 : 0,
           }}
         >
-          <Image source={{ uri: item.avatar }} className="w-12 h-12 rounded-full mr-3" />
-          <View className="flex-1">
+          {/* <Image source={{ uri: item.avatar }} className="w-12 h-12 rounded-full mr-3" /> */}
+          <Avatar uri={item.avatar} name={item.name} size={48} />
+          <View className="flex-1 ml-3">
             <View className="flex-row items-center justify-between w-full">
               <Text className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
                 {item.name}
               </Text>
               <View className="ml-2 min-w-[22px] py-0.5 rounded-full bg-green-500 items-center justify-center">
-              <Text className="text-[11px] text-white text-center">
-                {item.time}
-              </Text>
+                <Text className="text-[11px] text-white text-center">
+                  {item.time}
+                </Text>
               </View>
             </View>
             <View className="flex-row items-center justify-between mt-0.5">
@@ -201,8 +202,8 @@ export default function Chats() {
                 {item.lastMessage}
               </Text>
               {item.unread ? (
-                <View className="ml-2 min-w-[22px] px-1.5 py-0.5 rounded-full bg-blue-500 items-center justify-center">
-                  <Text className="text-[11px] text-white font-medium">
+                <View className="ml-2 min-w-[22px] p-0.5 rounded-full bg-blue-500 items-center justify-center">
+                  <Text className="text-sm text-white font-medium">
                     {item.unread}
                   </Text>
                 </View>
@@ -263,10 +264,11 @@ export default function Chats() {
           shadowOffset: { width: 0, height: 4 },
           elevation: 5,
         }}
-        onPress={() => Alert.alert("New chat", "Compose a new message")}
+        onPress={() => router.push("/select-contact")}
       >
         <Ionicons name="chatbubble-ellipses" size={26} color="white" />
       </Pressable>
+
     </View>
   );
 }
