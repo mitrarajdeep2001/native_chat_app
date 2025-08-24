@@ -1,5 +1,4 @@
 import ChatBody from "@/components/chat/ChatBody";
-import ChatFooter from "@/components/chat/ChatFooter";
 import ChatHeader from "@/components/chat/ChatHeader";
 import { useState } from "react";
 import { View } from "react-native";
@@ -61,10 +60,10 @@ export default function ChatScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white dark:bg-black">
+    <View className="flex-1">
       <ChatHeader />
-      <ChatBody messages={messages} />
-      <ChatFooter onSend={handleSend} />
+      <ChatBody messages={messages} setMessages={setMessages} />
+      {/* <ChatFooter onSend={handleSend} /> */}
     </View>
   );
 }
